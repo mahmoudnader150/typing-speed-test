@@ -31,9 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to redo current text
     function redoText() {
-        currentIndex = (currentIndex - 1 + textArray.length) % textArray.length;
-        const text = textArray[currentIndex];
-        textElement.textContent = text;
         userInput.value = '';
     }
 
