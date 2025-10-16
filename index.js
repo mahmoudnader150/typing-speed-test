@@ -28,19 +28,13 @@ function getNextText() {
     return text;
 }
 
-
-function redoText() {
-    currentIndex = (currentIndex - 1 + textArray.length) % textArray.length;
-    getNextText();
-}
-
-// Add event listeners
-generateButton.addEventListener('click', getNextText);
-redoButton.addEventListener('click', redoText);
-
-// Initialize with first text
-document.addEventListener('DOMContentLoaded', () => {
+// Event listener for Generate button
+generateButton.addEventListener('click', () => {
     getNextText();
 });
-    return text;
+
+
+
+
+
  
