@@ -13,28 +13,34 @@ const textArray = [
 
 let currentIndex = 0;
 
-// Get DOM elements
-const textElement = document.getElementById('text');
-const generateButton = document.getElementById('Generate-btn');
-const redoButton = document.getElementById('Redo-btn');
-const userInput = document.getElementById('user-input');
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Get DOM elements
+    const textElement = document.getElementById('text');
+    const generateButton = document.getElementById('Generate-btn');
+    const redoButton = document.getElementById('Redo-btn');
+    const userInput = document.getElementById('user-input');
 
-// Function to get next text
-function getNextText() {
-    const text = textArray[currentIndex];
-    currentIndex = (currentIndex + 1) % textArray.length;
-    textElement.textContent = text;
-    userInput.value = ''; 
-    return text;
-}
+    // Function to get next text
+    function getNextText() {
+        const text = textArray[currentIndex];
+        currentIndex = (currentIndex + 1) % textArray.length;
+        textElement.textContent = text;
+        userInput.value = '';
+    }
 
-// Event listener for Generate button
-generateButton.addEventListener('click', () => {
+    // Function to redo current text
+    function redoText() {
+        currentIndex = (currentIndex - 1 + textArray.length) % textArray.length;
+        const text = textArray[currentIndex];
+        textElement.textContent = text;
+        userInput.value = '';
+    }
+
+    // Add event listeners
+    generateButton.addEventListener('click', getNextText);
+    redoButton.addEventListener('click', redoText);
+
+    // Set initial text
     getNextText();
 });
-
-
-
-
-
- 

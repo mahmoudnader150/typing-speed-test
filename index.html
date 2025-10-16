@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Typing Speed Test</title>
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="index.js"></script>
 </head>
 <body>
     <div class="container">
         <h1 class="title">Typing</h1>
-       
-        <p id="text"></p>
-        
+        <div id="text-to-type" class="text-box">
+            <p id="text"></p>
+        </div>
         <textarea id="user-input" class="text-box" placeholder="Start typing..."></textarea>
         <div>
               <button id="Redo-btn">Redo</button>
@@ -20,6 +19,6 @@
         </div>
         <div id="result" class="result-box"></div>
     </div>
-    <script src="script.js"></script>   
+    <script src="index.js"></script>
 </body>
 </html>
