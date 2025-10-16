@@ -10,3 +10,37 @@ const textArray = [
     "The artist's studio was filled with half-finished canvases and the rich smell of oil paints. Natural light streamed through large windows, illuminating works in progress and inspiring new creative directions. Every corner held potential for artistic expression and discovery.",
     "Musicians gathered for rehearsal in the concert hall, their instruments creating a symphony of sound as they warmed up. The conductor arrived with fresh sheet music, ready to guide the orchestra through another challenging piece. The acoustics carried every note perfectly."
 ];
+
+let currentIndex = 0;
+
+// Get DOM elements
+const textElement = document.getElementById('text');
+const generateButton = document.getElementById('Generate-btn');
+const redoButton = document.getElementById('Redo-btn');
+const userInput = document.getElementById('user-input');
+
+// Function to get next text
+function getNextText() {
+    const text = textArray[currentIndex];
+    currentIndex = (currentIndex + 1) % textArray.length;
+    textElement.textContent = text;
+    userInput.value = ''; 
+    return text;
+}
+
+
+function redoText() {
+    currentIndex = (currentIndex - 1 + textArray.length) % textArray.length;
+    getNextText();
+}
+
+// Add event listeners
+generateButton.addEventListener('click', getNextText);
+redoButton.addEventListener('click', redoText);
+
+// Initialize with first text
+document.addEventListener('DOMContentLoaded', () => {
+    getNextText();
+});
+    return text;
+ 
