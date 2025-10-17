@@ -104,7 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Check for space key and process completed word
-        if (currentInput.endsWith(' ')) {
+        if (currentInput.endsWith(' ') || currentInput.endsWith('\n')
+             || currentInput.endsWith('\t') || currentInput.endsWith('\r') || 
+            currentInput.endsWith(',' ) || currentInput.endsWith('.') || 
+            currentInput.endsWith('?') || currentInput.endsWith('!')) {
             const words = currentInput.trim().split(/\s+/);
             const targetWords = targetText.split(/\s+/);
             const currentWord = words[words.length - 1];
