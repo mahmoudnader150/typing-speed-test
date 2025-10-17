@@ -19,13 +19,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const statsDiv = document.querySelector('.stats');
     const [wpmText, accuracyText] = statsDiv.querySelectorAll('p');
+    const resultDiv = document.getElementById('result');
 
     let currentIndex = 0;
     let startTime = null;
-    let wordCount = 0;
+    let timeElapsed = 0;
+    let isTestComplete = false;
+    let totalKeystrokes = 0;
+    let correctKeystrokes = 0;
     let currentWordIndex = 0;
     let mistakes = 0;
-    let totalCharacters = 0;
+    let testInterval = null;
 
     // Function to get next text
     function getNextText() {
@@ -49,10 +53,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset statistics
     function resetStats() {
         startTime = null;
+        timeElapsed = 0;
+        isTestComplete = false;
+        totalKeystrokes = 0;
+        correctKeystrokes = 0;
         currentWordIndex = 0;
-        totalWordsTyped = 0;
-        totalCorrectChars = 0;
-        totalCharsTyped = 0;
+        mistakes = 0;
+        if (testInterval) clearInterval(testInterval);
+        userInput.disabled = false;
+        resultDiv.style.display = 'none';
         updateStats(0, 100);
     }
 
@@ -62,10 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
         accuracyText.textContent = `Accuracy: ${Math.round(accuracy)}%`;
     }
 
-    // Calculate WPM and accuracy
+    // Calculate WPM and accuracy using standard typing test formula
     function calculateStats(userInput, targetText) {
         if (!startTime && userInput.length > 0) {
             startTime = Date.now();
+            startTimer();
         }
 
         if (!userInput.length) {
@@ -73,79 +83,90 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Standard WPM calculation: (characters typed / 5) / time in minutes
         const elapsedTime = (Date.now() - startTime) / 60000; // Convert to minutes
-        const wordsTyped = userInput.trim().split(/\s+/).length;
-        const wpm = elapsedTime > 0 ? wordsTyped / elapsedTime : 0;
+        const grossWPM = (totalKeystrokes / 5) / elapsedTime;
+        
+        // Calculate accuracy based on correct keystrokes
+        const accuracy = (correctKeystrokes / totalKeystrokes) * 100;
+        
+        // Net WPM = Gross WPM * (1 - error rate)
+        const netWPM = grossWPM * (accuracy / 100);
 
-        totalCharacters = userInput.length;
-        mistakes = 0;
-        for (let i = 0; i < userInput.length; i++) {
-            if (userInput[i] !== targetText[i]) {
-                mistakes++;
-            }
-        }
-
-        const accuracy = totalCharacters > 0 ? ((totalCharacters - mistakes) / totalCharacters) * 100 : 100;
-        updateStats(wpm, accuracy);
+        updateStats(netWPM, accuracy);
     }
 
-    let totalWordsTyped = 0;
-    let totalCorrectChars = 0;
-    let totalCharsTyped = 0;
+    // Timer function
+    function startTimer() {
+        if (testInterval) clearInterval(testInterval);
+        timeElapsed = 0;
+        testInterval = setInterval(() => {
+            timeElapsed++;
+            if (timeElapsed >= 60) { // Test ends after 60 seconds
+                completeTest();
+            }
+        }, 1000);
+    }
+
+    // Complete test function
+    function completeTest() {
+        isTestComplete = true;
+        clearInterval(testInterval);
+        userInput.disabled = true;
+
+        const finalWPM = parseInt(wpmText.textContent.split(':')[1]);
+        const finalAccuracy = parseInt(accuracyText.textContent.split(':')[1]);
+
+        // Show final results
+        resultDiv.innerHTML = `
+            <h3>Test Complete!</h3>
+            <p>Final WPM: ${finalWPM}</p>
+            <p>Accuracy: ${finalAccuracy}%</p>
+            <p>Total Words: ${totalKeystrokes / 5}</p>
+            <p>Time: ${timeElapsed} seconds</p>
+        `;
+        resultDiv.style.display = 'block';
+    }
 
     // Handle input events
     userInput.addEventListener('input', (e) => {
+        if (isTestComplete) return;
+        
         const targetText = textElement.textContent;
         const currentInput = e.target.value;
         
         // Initialize timer on first character
         if (!startTime && currentInput.length === 1) {
             startTime = Date.now();
+            startTimer();
         }
 
-        // Check for space key and process completed word
-        if (currentInput.endsWith(' ') || currentInput.endsWith('\n')
-             || currentInput.endsWith('\t') || currentInput.endsWith('\r') || 
-            currentInput.endsWith(',' ) || currentInput.endsWith('.') || 
-            currentInput.endsWith('?') || currentInput.endsWith('!')) {
+        // Count keystrokes and check accuracy
+        if (currentInput.length > 0) {
+            totalKeystrokes++;
+            if (currentInput[currentInput.length - 1] === targetText[currentInput.length - 1]) {
+                correctKeystrokes++;
+            }
+        }
+
+        calculateStats(currentInput, targetText);
+
+        // Handle word completion (space or punctuation)
+        if (/[\s.,!?]$/.test(currentInput)) {
             const words = currentInput.trim().split(/\s+/);
             const targetWords = targetText.split(/\s+/);
             const currentWord = words[words.length - 1];
             const targetWord = targetWords[currentWordIndex];
 
-            // Update stats for the completed word
-            totalWordsTyped++;
-            totalCharsTyped += currentInput.length;
-            
-            // Count correct characters in the current word
-            let correctChars = 0;
-            for (let i = 0; i < currentWord.length && i < targetWord.length; i++) {
-                if (currentWord[i] === targetWord[i]) {
-                    correctChars++;
-                    totalCorrectChars++;
+            // Only clear input if word matches or space is pressed
+            if (currentWord === targetWord || currentInput.endsWith(' ')) {
+                userInput.value = '';
+                currentWordIndex++;
+
+                // Check if we've completed all words
+                if (currentWordIndex >= targetWords.length) {
+                    completeTest();
                 }
-            }
-
-            // Calculate and update stats
-            const elapsedTime = (Date.now() - startTime) / 60000; // Convert to minutes
-            const wpm = elapsedTime > 0 ? totalWordsTyped / elapsedTime : 0;
-            const accuracy = totalCharsTyped > 0 ? (totalCorrectChars / totalCharsTyped) * 100 : 100;
-            
-            updateStats(wpm, accuracy);
-            
-            // Clear input for next word
-            userInput.value = '';
-            currentWordIndex++;
-
-            // Check if we've completed all words
-            if (currentWordIndex >= targetWords.length) {
-                setTimeout(() => {
-                    getNextText();
-                    totalWordsTyped = 0;
-                    totalCorrectChars = 0;
-                    totalCharsTyped = 0;
-                    startTime = null;
-                }, 500);
             }
         } else {
             // Update stats in real-time for the current word
