@@ -11,42 +11,21 @@ const textArray = [
     "Musicians gathered for rehearsal in the concert hall, their instruments creating a symphony of sound as they warmed up. The conductor arrived with fresh sheet music, ready to guide the orchestra through another challenging piece. The acoustics carried every note perfectly."
 ];
 
-let currentIndex = 0;
-let startTime = null;
-let accuracy = 0;
-let wpm = 0;
-
-let input = document.getElementById('user-input');
-
-input.addEventListener('input', () => {
-    const text = textElement.textContent;
-    const userText = input.value;
-
-    // Calculate WPM
-    if (startTime) {
-        const elapsedTime = (Date.now() - startTime) / 60000; // Convert to minutes
-        wpm = Math.round((userText.split(' ').length / elapsedTime));
-    }
-
-    // Calculate accuracy
-    const correctChars = userText.split('').filter((char, index) => char === text[index]).length;
-    accuracy = Math.round((correctChars / text.length) * 100);
-
-    // Update stats
-    updateStats();
-});
-
-function updateStats() {
-    const stats = document.querySelector('.stats');
-    stats.innerHTML = `<p>WPM: ${wpm}</p><p>Accuracy: ${accuracy}%</p>`;
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     // Get DOM elements
     const textElement = document.getElementById('text');
     const generateButton = document.getElementById('Generate-btn');
     const redoButton = document.getElementById('Redo-btn');
     const userInput = document.getElementById('user-input');
+    const wpmElement = document.getElementById('wpm');
+    const accuracyElement = document.getElementById('accuracy');
+
+    let currentIndex = 0;
+    let startTime = null;
+    let wordCount = 0;
+    let currentWordIndex = 0;
+    let mistakes = 0;
+    let totalCharacters = 0;
 
     // Function to get next text
     function getNextText() {
@@ -54,14 +33,83 @@ document.addEventListener('DOMContentLoaded', () => {
         currentIndex = (currentIndex + 1) % textArray.length;
         textElement.textContent = text;
         userInput.value = '';
+        resetStats();
+        return text;
     }
 
     // Function to redo current text
     function redoText() {
+        currentIndex = (currentIndex - 1 + textArray.length) % textArray.length;
+        const text = textArray[currentIndex];
+        textElement.textContent = text;
         userInput.value = '';
+        resetStats();
     }
 
-    // Add event listeners
+    // Reset statistics
+    function resetStats() {
+        startTime = null;
+        wordCount = 0;
+        currentWordIndex = 0;
+        mistakes = 0;
+        totalCharacters = 0;
+        updateStats(0, 100);
+    }
+
+    // Update WPM and accuracy displays
+    function updateStats(wpm, accuracy) {
+        wpmElement.textContent = Math.round(wpm);
+        accuracyElement.textContent = Math.round(accuracy) + '%';
+    }
+
+    // Calculate WPM and accuracy
+    function calculateStats(userInput, targetText) {
+        if (!startTime) {
+            startTime = Date.now();
+        }
+
+        const elapsedTime = (Date.now() - startTime) / 60000; // Convert to minutes
+        const wordsTyped = userInput.trim().split(/\s+/).length;
+        const wpm = wordsTyped / elapsedTime || 0;
+
+        totalCharacters = userInput.length;
+        mistakes = 0;
+        for (let i = 0; i < userInput.length; i++) {
+            if (userInput[i] !== targetText[i]) {
+                mistakes++;
+            }
+        }
+
+        const accuracy = ((totalCharacters - mistakes) / totalCharacters) * 100 || 100;
+        updateStats(wpm, accuracy);
+    }
+
+    // Handle input events
+    userInput.addEventListener('input', (e) => {
+        const targetText = textElement.textContent;
+        const currentInput = e.target.value;
+        
+        calculateStats(currentInput, targetText);
+
+        // Check for space key and clear if it's a complete word
+        if (currentInput.endsWith(' ')) {
+            const words = currentInput.trim().split(/\s+/);
+            const targetWords = targetText.split(/\s+/);
+            
+            // Only clear if we've completed a word correctly
+            if (words[words.length - 1] === targetWords[currentWordIndex]) {
+                currentWordIndex++;
+                userInput.value = '';
+                
+                // If we've completed all words, move to next text
+                if (currentWordIndex >= targetWords.length) {
+                    setTimeout(getNextText, 500); // Short delay before next text
+                }
+            }
+        }
+    });
+
+    // Add event listeners for buttons
     generateButton.addEventListener('click', getNextText);
     redoButton.addEventListener('click', redoText);
 
