@@ -49,10 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset statistics
     function resetStats() {
         startTime = null;
-        wordCount = 0;
         currentWordIndex = 0;
-        mistakes = 0;
-        totalCharacters = 0;
+        totalWordsTyped = 0;
+        totalCorrectChars = 0;
+        totalCharsTyped = 0;
         updateStats(0, 100);
     }
 
@@ -89,28 +89,73 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStats(wpm, accuracy);
     }
 
+    let totalWordsTyped = 0;
+    let totalCorrectChars = 0;
+    let totalCharsTyped = 0;
+
     // Handle input events
     userInput.addEventListener('input', (e) => {
         const targetText = textElement.textContent;
         const currentInput = e.target.value;
         
-        calculateStats(currentInput, targetText);
+        // Initialize timer on first character
+        if (!startTime && currentInput.length === 1) {
+            startTime = Date.now();
+        }
 
-        // Check for space key and clear if it's a complete word
+        // Check for space key and process completed word
         if (currentInput.endsWith(' ')) {
             const words = currentInput.trim().split(/\s+/);
             const targetWords = targetText.split(/\s+/);
+            const currentWord = words[words.length - 1];
+            const targetWord = targetWords[currentWordIndex];
+
+            // Update stats for the completed word
+            totalWordsTyped++;
+            totalCharsTyped += currentInput.length;
             
-            // Only clear if we've completed a word correctly
-            if (words[words.length - 1] === targetWords[currentWordIndex]) {
-                currentWordIndex++;
-                userInput.value = '';
-                
-                // If we've completed all words, move to next text
-                if (currentWordIndex >= targetWords.length) {
-                    setTimeout(getNextText, 500); // Short delay before next text
+            // Count correct characters in the current word
+            let correctChars = 0;
+            for (let i = 0; i < currentWord.length && i < targetWord.length; i++) {
+                if (currentWord[i] === targetWord[i]) {
+                    correctChars++;
+                    totalCorrectChars++;
                 }
             }
+
+            // Calculate and update stats
+            const elapsedTime = (Date.now() - startTime) / 60000; // Convert to minutes
+            const wpm = elapsedTime > 0 ? totalWordsTyped / elapsedTime : 0;
+            const accuracy = totalCharsTyped > 0 ? (totalCorrectChars / totalCharsTyped) * 100 : 100;
+            
+            updateStats(wpm, accuracy);
+            
+            // Clear input for next word
+            userInput.value = '';
+            currentWordIndex++;
+
+            // Check if we've completed all words
+            if (currentWordIndex >= targetWords.length) {
+                setTimeout(() => {
+                    getNextText();
+                    totalWordsTyped = 0;
+                    totalCorrectChars = 0;
+                    totalCharsTyped = 0;
+                    startTime = null;
+                }, 500);
+            }
+        } else {
+            // Update stats in real-time for the current word
+            totalCharsTyped = totalWordsTyped * 5 + currentInput.length; // Assuming average word length of 5
+            const elapsedTime = (Date.now() - startTime) / 60000;
+            const currentCorrectChars = Array.from(currentInput).reduce((count, char, i) => {
+                return count + (char === targetText[i] ? 1 : 0);
+            }, totalCorrectChars);
+            
+            const wpm = elapsedTime > 0 ? (totalWordsTyped + (currentInput.length / 5)) / elapsedTime : 0;
+            const accuracy = totalCharsTyped > 0 ? (currentCorrectChars / totalCharsTyped) * 100 : 100;
+            
+            updateStats(wpm, accuracy);
         }
     });
 
