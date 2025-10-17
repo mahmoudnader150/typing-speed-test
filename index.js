@@ -36,6 +36,11 @@ input.addEventListener('input', () => {
     updateStats();
 });
 
+function updateStats() {
+    const stats = document.querySelector('.stats');
+    stats.innerHTML = `<p>WPM: ${wpm}</p><p>Accuracy: ${accuracy}%</p>`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Get DOM elements
     const textElement = document.getElementById('text');
