@@ -23,13 +23,13 @@ body{
 
 #text{
     width: 800px;
-    height: 180px;
+    height: 240px;
     border-radius: 10px;
     background-color: rgb(57,59,74);
     font-style: semibold;
     color: whitesmoke;
     padding: 20px;
-    font-size: 24px;
+    font-size: 28px;
     line-height: 1.5;
     margin-top: 20px;
     overflow-y: auto;
