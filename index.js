@@ -13,7 +13,6 @@ const textArray = [
 
 let currentIndex = 0;
 
-// Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Get DOM elements
     const textElement = document.getElementById('text');
