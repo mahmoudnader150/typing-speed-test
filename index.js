@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const generateButton = document.getElementById('Generate-btn');
     const redoButton = document.getElementById('Redo-btn');
     const userInput = document.getElementById('user-input');
-    const wpmElement = document.getElementById('wpm');
-    const accuracyElement = document.getElementById('accuracy');
+    const statsDiv = document.querySelector('.stats');
+    const [wpmText, accuracyText] = statsDiv.querySelectorAll('p');
 
     let currentIndex = 0;
     let startTime = null;
@@ -58,19 +58,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update WPM and accuracy displays
     function updateStats(wpm, accuracy) {
-        wpmElement.textContent = Math.round(wpm);
-        accuracyElement.textContent = Math.round(accuracy) + '%';
+        wpmText.textContent = `WPM: ${Math.round(wpm)}`;
+        accuracyText.textContent = `Accuracy: ${Math.round(accuracy)}%`;
     }
 
     // Calculate WPM and accuracy
     function calculateStats(userInput, targetText) {
-        if (!startTime) {
+        if (!startTime && userInput.length > 0) {
             startTime = Date.now();
+        }
+
+        if (!userInput.length) {
+            updateStats(0, 100);
+            return;
         }
 
         const elapsedTime = (Date.now() - startTime) / 60000; // Convert to minutes
         const wordsTyped = userInput.trim().split(/\s+/).length;
-        const wpm = wordsTyped / elapsedTime || 0;
+        const wpm = elapsedTime > 0 ? wordsTyped / elapsedTime : 0;
 
         totalCharacters = userInput.length;
         mistakes = 0;
@@ -80,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const accuracy = ((totalCharacters - mistakes) / totalCharacters) * 100 || 100;
+        const accuracy = totalCharacters > 0 ? ((totalCharacters - mistakes) / totalCharacters) * 100 : 100;
         updateStats(wpm, accuracy);
     }
 
