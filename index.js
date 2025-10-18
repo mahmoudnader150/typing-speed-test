@@ -1,192 +1,172 @@
-const textArray = [
-    "The early morning sun cast long shadows across the quiet park as joggers made their way along the winding paths. Birds chirped cheerfully in the trees above, welcoming the new day with their melodious songs. A gentle breeze carried the sweet scent of blooming flowers through the air.",
-    "Technology continues to advance at an unprecedented rate, transforming the way we live, work, and communicate with one another. From artificial intelligence to renewable energy solutions, innovation drives progress in every sector of modern society.",
-    "Deep in the ancient forest, towering trees stretched their branches toward the sky, creating a natural cathedral of green leaves and filtered sunlight. The forest floor was carpeted with soft moss and delicate ferns, while the sound of a distant stream provided nature's perfect soundtrack.",
-    "The bustling city streets came alive as people hurried to their destinations, briefcases and coffee cups in hand. Street vendors called out their morning specials, while taxis honked their horns in the growing traffic. The energy of urban life was palpable in every corner.",
-    "Inside the cozy library, students pored over their textbooks, preparing for upcoming exams. The smell of old books and the soft whisper of turning pages created a peaceful atmosphere conducive to learning and concentration. Knowledge seekers found their sanctuary among the endless rows of books.",
-    "Professional chefs worked with precision in the restaurant kitchen, creating culinary masterpieces from fresh ingredients. The sizzle of pans and the aroma of herbs filled the air as they prepared elegant dishes for eager diners. Every detail was carefully considered and executed.",
-    "The scientific research team made an extraordinary breakthrough in their latest experiment, potentially revolutionizing their field of study. Months of dedicated work and careful analysis had finally paid off, opening new possibilities for future investigations.",
-    "Waves crashed rhythmically against the sandy shore as seabirds soared overhead, searching for their morning meal. Beachcombers walked along the water's edge, collecting interesting shells and enjoying the peaceful atmosphere of the early morning seaside landscape.",
-    "The artist's studio was filled with half-finished canvases and the rich smell of oil paints. Natural light streamed through large windows, illuminating works in progress and inspiring new creative directions. Every corner held potential for artistic expression and discovery.",
-    "Musicians gathered for rehearsal in the concert hall, their instruments creating a symphony of sound as they warmed up. The conductor arrived with fresh sheet music, ready to guide the orchestra through another challenging piece. The acoustics carried every note perfectly."
+// Array of texts for typing practice
+const texts = [
+    "The early morning sun cast long shadows across the quiet park as joggers made their way along the winding paths. Birds chirped cheerfully in the trees above.",
+    "Technology continues to advance at an unprecedented rate, transforming the way we live and work. Innovation drives progress in every sector of modern society.",
+    "Deep in the ancient forest, towering trees stretched their branches toward the sky, creating a natural cathedral of filtered sunlight and gentle breezes.",
+    "The bustling city streets came alive as people hurried to their destinations. Street vendors called out their morning specials as the city awakened.",
+    "Inside the cozy library, students pored over their textbooks, preparing for upcoming exams. The smell of old books filled the peaceful atmosphere."
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Get DOM elements
-    const textElement = document.getElementById('text');
-    const generateButton = document.getElementById('Generate-btn');
-    const redoButton = document.getElementById('Redo-btn');
-    const userInput = document.getElementById('user-input');
-    const statsDiv = document.querySelector('.stats');
-    const [wpmText, accuracyText] = statsDiv.querySelectorAll('p');
-    const resultDiv = document.getElementById('result');
+class TypingTest {
+    constructor() {
+        // DOM Elements
+        this.textDisplay = document.getElementById('text');
+        this.inputField = document.getElementById('user-input');
+        this.timer = document.getElementById('timer');
+        this.wpmDisplay = document.getElementById('wpm');
+        this.accuracyDisplay = document.getElementById('accuracy');
+        this.resultModal = document.getElementById('result');
 
-    let currentIndex = 0;
-    let startTime = null;
-    let timeElapsed = 0;
-    let isTestComplete = false;
-    let totalKeystrokes = 0;
-    let correctKeystrokes = 0;
-    let currentWordIndex = 0;
-    let mistakes = 0;
-    let testInterval = null;
+        // Test State
+        this.timeLeft = 60;
+        this.timeElapsed = 0;
+        this.currentIndex = 0;
+        this.isRunning = false;
+        this.intervalId = null;
+        this.startTime = null;
+        this.totalTyped = 0;
+        this.correctTyped = 0;
 
-    // Function to get next text
-    function getNextText() {
-        const text = textArray[currentIndex];
-        currentIndex = (currentIndex + 1) % textArray.length;
-        textElement.textContent = text;
-        userInput.value = '';
-        resetStats();
-        return text;
+        // Initialize
+        this.initializeEventListeners();
+        this.loadNewText();
     }
 
-    // Function to redo current text
-    function redoText() {
-        currentIndex = (currentIndex - 1 + textArray.length) % textArray.length;
-        const text = textArray[currentIndex];
-        textElement.textContent = text;
-        userInput.value = '';
-        resetStats();
+    initializeEventListeners() {
+        // Input event for typing
+        this.inputField.addEventListener('input', () => this.handleTyping());
+
+        // Button click events
+        document.getElementById('Generate-btn').addEventListener('click', () => this.loadNewText());
+        document.getElementById('Redo-btn').addEventListener('click', () => this.restartTest());
     }
 
-    // Reset statistics
-    function resetStats() {
-        startTime = null;
-        timeElapsed = 0;
-        isTestComplete = false;
-        totalKeystrokes = 0;
-        correctKeystrokes = 0;
-        currentWordIndex = 0;
-        mistakes = 0;
-        if (testInterval) clearInterval(testInterval);
-        userInput.disabled = false;
-        resultDiv.style.display = 'none';
-        updateStats(0, 100);
-    }
-
-    // Update WPM and accuracy displays
-    function updateStats(wpm, accuracy) {
-        wpmText.textContent = `WPM: ${Math.round(wpm)}`;
-        accuracyText.textContent = `Accuracy: ${Math.round(accuracy)}%`;
-    }
-
-    // Calculate WPM and accuracy using standard typing test formula
-    function calculateStats(userInput, targetText) {
-        if (!startTime && userInput.length > 0) {
-            startTime = Date.now();
-            startTimer();
+    handleTyping() {
+        if (!this.isRunning) {
+            this.startTest();
         }
 
-        if (!userInput.length) {
-            updateStats(0, 100);
-            return;
+        const inputText = this.inputField.value;
+        const originalText = this.textDisplay.textContent;
+
+        // Calculate accuracy
+        this.totalTyped++;
+        if (inputText[inputText.length - 1] === originalText[inputText.length - 1]) {
+            this.correctTyped++;
         }
 
-        // Standard WPM calculation: (characters typed / 5) / time in minutes
-        const elapsedTime = (Date.now() - startTime) / 60000; // Convert to minutes
-        const grossWPM = (totalKeystrokes / 5) / elapsedTime;
-        
-        // Calculate accuracy based on correct keystrokes
-        const accuracy = (correctKeystrokes / totalKeystrokes) * 100;
-        
-        // Net WPM = Gross WPM * (1 - error rate)
-        const netWPM = grossWPM * (accuracy / 100);
+        // Update stats
+        this.updateStats();
 
-        updateStats(netWPM, accuracy);
+        // Check for word completion (space or punctuation)
+        if (inputText.endsWith(' ') || /[.,!?]$/.test(inputText)) {
+            const words = inputText.trim().split(/\s+/);
+            const targetWords = originalText.split(/\s+/);
+            
+            // If word is complete, clear input
+            if (words[words.length - 1] === targetWords[words.length - 1]) {
+                this.inputField.value = '';
+                
+                // If all words are complete, load new text
+                if (words.length === targetWords.length) {
+                    this.loadNewText();
+                }
+            }
+        }
     }
 
-    // Timer function
-    function startTimer() {
-        if (testInterval) clearInterval(testInterval);
-        timeElapsed = 0;
-        testInterval = setInterval(() => {
-            timeElapsed++;
-            if (timeElapsed >= 60) { // Test ends after 60 seconds
-                completeTest();
+    startTest() {
+        this.isRunning = true;
+        this.startTime = new Date();
+        this.startTimer();
+    }
+
+    startTimer() {
+        this.intervalId = setInterval(() => {
+            this.timeLeft--;
+            this.timeElapsed++;
+            this.timer.textContent = this.timeLeft;
+
+            if (this.timeLeft <= 0) {
+                this.finishTest();
             }
         }, 1000);
     }
 
-    // Complete test function
-    function completeTest() {
-        isTestComplete = true;
-        clearInterval(testInterval);
-        userInput.disabled = true;
+    updateStats() {
+        // Calculate WPM: (characters typed / 5) / time in minutes
+        const minutes = (new Date() - this.startTime) / 60000;
+        const wpm = Math.round((this.totalTyped / 5) / minutes) || 0;
+        
+        // Calculate accuracy
+        const accuracy = Math.round((this.correctTyped / this.totalTyped) * 100) || 100;
 
-        const finalWPM = parseInt(wpmText.textContent.split(':')[1]);
-        const finalAccuracy = parseInt(accuracyText.textContent.split(':')[1]);
-
-        // Show final results
-        resultDiv.innerHTML = `
-            <h3>Test Complete!</h3>
-            <p>Final WPM: ${finalWPM}</p>
-            <p>Accuracy: ${finalAccuracy}%</p>
-            <p>Total Words: ${totalKeystrokes / 5}</p>
-            <p>Time: ${timeElapsed} seconds</p>
-        `;
-        resultDiv.style.display = 'block';
+        // Update displays
+        this.wpmDisplay.textContent = wpm;
+        this.accuracyDisplay.textContent = accuracy + '%';
     }
 
-    // Handle input events
-    userInput.addEventListener('input', (e) => {
-        if (isTestComplete) return;
+    loadNewText() {
+        // Reset if test is running
+        if (this.isRunning) {
+            this.resetTest();
+        }
+
+        // Load new text and increment index
+        this.textDisplay.textContent = texts[this.currentIndex];
+        this.currentIndex = (this.currentIndex + 1) % texts.length;
+        this.inputField.value = '';
+    }
+
+    resetTest() {
+        // Clear timer
+        clearInterval(this.intervalId);
         
-        const targetText = textElement.textContent;
-        const currentInput = e.target.value;
+        // Reset state
+        this.timeLeft = 60;
+        this.timeElapsed = 0;
+        this.isRunning = false;
+        this.totalTyped = 0;
+        this.correctTyped = 0;
+        this.startTime = null;
         
-        // Initialize timer on first character
-        if (!startTime && currentInput.length === 1) {
-            startTime = Date.now();
-            startTimer();
-        }
+        // Reset displays
+        this.timer.textContent = '60';
+        this.wpmDisplay.textContent = '0';
+        this.accuracyDisplay.textContent = '100%';
+        this.inputField.value = '';
+    }
 
-        // Count keystrokes and check accuracy
-        if (currentInput.length > 0) {
-            totalKeystrokes++;
-            if (currentInput[currentInput.length - 1] === targetText[currentInput.length - 1]) {
-                correctKeystrokes++;
-            }
-        }
+    restartTest() {
+        this.resetTest();
+        this.textDisplay.textContent = texts[this.currentIndex];
+    }
 
-        calculateStats(currentInput, targetText);
+    finishTest() {
+        // Stop the test
+        clearInterval(this.intervalId);
+        this.isRunning = false;
+        this.inputField.disabled = true;
 
-        // Handle word completion (space or punctuation)
-        if (/[\s.,!?]$/.test(currentInput)) {
-            const words = currentInput.trim().split(/\s+/);
-            const targetWords = targetText.split(/\s+/);
-            const currentWord = words[words.length - 1];
-            const targetWord = targetWords[currentWordIndex];
+        // Show results
+        this.showResults();
+    }
 
-            // Only clear input if word matches or space is pressed
-            if (currentWord === targetWord || currentInput.endsWith(' ')) {
-                userInput.value = '';
-                currentWordIndex++;
+    showResults() {
+        const wpm = this.wpmDisplay.textContent;
+        const accuracy = this.accuracyDisplay.textContent;
 
-                // Check if we've completed all words
-                if (currentWordIndex >= targetWords.length) {
-                    completeTest();
-                }
-            }
-        } else {
-            // Update stats in real-time for the current word
-            totalCharsTyped = totalWordsTyped * 5 + currentInput.length; // Assuming average word length of 5
-            const elapsedTime = (Date.now() - startTime) / 60000;
-            const currentCorrectChars = Array.from(currentInput).reduce((count, char, i) => {
-                return count + (char === targetText[i] ? 1 : 0);
-            }, totalCorrectChars);
-            
-            const wpm = elapsedTime > 0 ? (totalWordsTyped + (currentInput.length / 5)) / elapsedTime : 0;
-            const accuracy = totalCharsTyped > 0 ? (currentCorrectChars / totalCharsTyped) * 100 : 100;
-            
-            updateStats(wpm, accuracy);
-        }
-    });
+        this.resultModal.innerHTML = `
+            <h2>Test Complete!</h2>
+            <p>WPM: ${wpm}</p>
+            <p>Accuracy: ${accuracy}</p>
+            <p>Time: ${this.timeElapsed} seconds</p>
+        `;
+        this.resultModal.style.display = 'block';
+    }
+}
 
-    // Add event listeners for buttons
-    generateButton.addEventListener('click', getNextText);
-    redoButton.addEventListener('click', redoText);
-
-    // Set initial text
-    getNextText();
+// Initialize when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new TypingTest();
 });

@@ -10,14 +10,49 @@
     <div class="container">
         <h1 class="title">Typing speed test</h1>
         <div class="stats">
-            <p>WPM:  0</p>
-            <p>Accuracy:  0%</p>
+            <div class="stat-item">
+                <p class="stat-label">Time</p>
+                <p id="timer" class="stat-value">60s</p>
+            </div>
+            <div class="stat-item">
+                <p class="stat-label">WPM</p>
+                <p id="wpm" class="stat-value">0</p>
+            </div>
+            <div class="stat-item">
+                <p class="stat-label">Accuracy</p>
+                <p id="accuracy" class="stat-value">0%</p>
+            </div>
         </div>
         <div id="text-to-type" class="text-box">
             <p id="text"></p>
         </div>
 
         <textarea id="user-input" class="text-box" placeholder="Start typing..."></textarea>
+
+        <!-- Results Modal -->
+        <div id="results-modal" class="modal">
+            <div class="modal-content">
+                <h2>Test Complete!</h2>
+                <div class="results-grid">
+                    <div class="result-item">
+                        <p class="result-label">WPM</p>
+                        <p id="final-wpm" class="result-value">0</p>
+                    </div>
+                    <div class="result-item">
+                        <p class="result-label">Accuracy</p>
+                        <p id="final-accuracy" class="result-value">0%</p>
+                    </div>
+                    <div class="result-item">
+                        <p class="result-label">Time</p>
+                        <p id="final-time" class="result-value">0s</p>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button id="try-again" class="btn">Try Again</button>
+                    <button id="next-test" class="btn">Next Test</button>
+                </div>
+            </div>
+        </div>
         <div>
               <button id="Redo-btn">Redo</button>
               <button id="Generate-btn">Generate</button>
