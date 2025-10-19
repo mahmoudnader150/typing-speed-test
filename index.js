@@ -49,16 +49,25 @@ class TypingTest {
         const inputText = this.inputField.value;
         const originalText = this.textDisplay.textContent;
 
-        // Calculate accuracy
+        // Calculate accuracy and update text display with highlighting
         this.totalTyped = inputText.length;
         this.correctTyped = 0;
         
-        // Compare each character for accuracy
-        for (let i = 0; i < inputText.length; i++) {
-            if (inputText[i] === originalText[i]) {
-                this.correctTyped++;
+        let displayHTML = '';
+        for (let i = 0; i < originalText.length; i++) {
+            if (i < inputText.length) {
+                if (inputText[i] === originalText[i]) {
+                    this.correctTyped++;
+                    displayHTML += `<span class="correct">${originalText[i]}</span>`;
+                } else {
+                    displayHTML += `<span class="incorrect">${originalText[i]}</span>`;
+                }
+            } else {
+                displayHTML += `<span class="remaining">${originalText[i]}</span>`;
             }
         }
+        
+        this.textDisplay.innerHTML = displayHTML;
 
         // Update stats
         this.updateStats();
@@ -157,11 +166,28 @@ class TypingTest {
 
         this.resultModal.innerHTML = `
             <h2>Test Complete!</h2>
-            <p>WPM: ${wpm}</p>
-            <p>Accuracy: ${accuracy}</p>
-            <p>Time: ${this.timeElapsed} seconds</p>
+            <div class="final-stats">
+                <div class="final-stat-item">
+                    <h3>WPM</h3>
+                    <p>${wpm}</p>
+                </div>
+                <div class="final-stat-item">
+                    <h3>Accuracy</h3>
+                    <p>${accuracy}</p>
+                </div>
+                <div class="final-stat-item">
+                    <h3>Time</h3>
+                    <p>${this.timeElapsed}s</p>
+                </div>
+            </div>
         `;
         this.resultModal.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            this.resultModal.style.display = 'none';
+            this.restartTest(); // Automatically restart the test
+        }, 5000);
     }
 }
 
