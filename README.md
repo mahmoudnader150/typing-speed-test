@@ -2,6 +2,9 @@
 
 A modern, interactive typing speed test application built with JavaScript that helps users measure and improve their typing skills.
 
+## Try It Now!
+🚀 [Live Demo](https://mahmoudnader-typing-test.netlify.app)
+
 ## Features
 
 - 🚀 Real-time WPM (Words Per Minute) calculation
