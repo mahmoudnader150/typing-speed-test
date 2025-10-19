@@ -50,28 +50,22 @@ class TypingTest {
         const originalText = this.textDisplay.textContent;
 
         // Calculate accuracy
-        this.totalTyped++;
-        if (inputText[inputText.length - 1] === originalText[inputText.length - 1]) {
-            this.correctTyped++;
+        this.totalTyped = inputText.length;
+        this.correctTyped = 0;
+        
+        // Compare each character for accuracy
+        for (let i = 0; i < inputText.length; i++) {
+            if (inputText[i] === originalText[i]) {
+                this.correctTyped++;
+            }
         }
 
         // Update stats
         this.updateStats();
 
-        // Check for word completion (space or punctuation)
-        if (inputText.endsWith(' ') || /[.,!?]$/.test(inputText)) {
-            const words = inputText.trim().split(/\s+/);
-            const targetWords = originalText.split(/\s+/);
-            
-            // If word is complete, clear input
-            if (words[words.length - 1] === targetWords[words.length - 1]) {
-                this.inputField.value = '';
-                
-                // If all words are complete, load new text
-                if (words.length === targetWords.length) {
-                    this.loadNewText();
-                }
-            }
+        // Check if text is complete and correct
+        if (inputText.length === originalText.length && inputText === originalText) {
+            this.loadNewText();
         }
     }
 
@@ -107,15 +101,17 @@ class TypingTest {
     }
 
     loadNewText() {
-        // Reset if test is running
-        if (this.isRunning) {
-            this.resetTest();
-        }
-
         // Load new text and increment index
         this.textDisplay.textContent = texts[this.currentIndex];
         this.currentIndex = (this.currentIndex + 1) % texts.length;
-        this.inputField.value = '';
+        
+        // Only clear input and reset stats if explicitly requested
+        if (!this.isRunning) {
+            this.inputField.value = '';
+            this.totalTyped = 0;
+            this.correctTyped = 0;
+            this.updateStats();
+        }
     }
 
     resetTest() {
@@ -134,7 +130,10 @@ class TypingTest {
         this.timer.textContent = '60';
         this.wpmDisplay.textContent = '0';
         this.accuracyDisplay.textContent = '100%';
+        
+        // Clear input field and enable it
         this.inputField.value = '';
+        this.inputField.disabled = false;
     }
 
     restartTest() {
