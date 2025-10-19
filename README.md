@@ -61,28 +61,3 @@ typing-speed-test/
 └── README.md     # Project documentation
 ```
 
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/mahmoudnader150/typing-speed-test.git
-```
-
-2. Open `index.html` in your web browser
-3. Start typing to begin the test!
-
-No additional dependencies or build steps required!
-
-## Future Enhancements
-
-- [ ] User accounts and progress tracking
-- [ ] Custom text input option
-- [ ] Different time duration options
-- [ ] Multiplayer mode
-- [ ] Statistics and progress graphs
-- [ ] Different difficulty levels
-- [ ] Custom themes
-- [ ] Keyboard layout display
-
----
-Created with ❤️ by [Mahmoud Nader](https://github.com/mahmoudnader150)
